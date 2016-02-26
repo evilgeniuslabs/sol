@@ -443,30 +443,25 @@ uint8_t decayingOrbits()
 {
   dimAll(240);
 
-  const uint8_t cnt = 24;
-  
-  static uint8_t positions[cnt] = { 255, 255, 255 };
+  const uint8_t count = 12;
+  static uint8_t positions[count];
 
   EVERY_N_MILLISECONDS(15)
   {
-    for (uint8_t i = 0; i < cnt; i++)
+    for (uint8_t i = 0; i < count; i++)
     {
       uint8_t pos = positions[i];
 
       if (pos == 255 && random8() < 1)
-      {
         pos--;
-      }
 
       if (pos != 255)
-      {
         pos--;
-      }
 
+      if (pos != 255)
+        leds[NUM_LEDS - pos] = ColorFromPalette(gCurrentPalette, (255 / count) * i);
+        
       positions[i] = pos;
-
-      if (pos != 255)
-        leds[NUM_LEDS - pos] = ColorFromPalette(gCurrentPalette, (255 / cnt) * i);
     }
   }
 
