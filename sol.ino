@@ -409,18 +409,94 @@ void palettetest( CRGB* ledarray, uint16_t numleds, const CRGBPalette16& gCurren
   fill_palette( ledarray, numleds, startindex, (256 / NUM_LEDS) + 1, gCurrentPalette, 255, LINEARBLEND);
 }
 
+#include "Disk.h"
+
+uint8_t paletteArcs()
+{
+  dimAll(254);
+
+  static uint8_t offset = 0;
+
+  bool alternate = false;
+
+  for (uint8_t i = 3; i < ringCount; i++)
+  {
+    uint8_t angle = beat8(i * 3);
+
+    if (alternate)
+      angle = 255 - angle;
+
+    fillRing256(i, ColorFromPalette(gCurrentPalette, (i * (255 / ringCount)) + offset), angle - 16, angle + 16);
+
+    alternate = !alternate;
+  }
+
+  EVERY_N_MILLISECONDS(60)
+  {
+    offset++;
+  }
+
+  return 4;
+}
+
+uint8_t decayingOrbits()
+{
+  dimAll(240);
+
+  const uint8_t cnt = 24;
+  
+  static uint8_t positions[cnt] = { 255, 255, 255 };
+
+  EVERY_N_MILLISECONDS(15)
+  {
+    for (uint8_t i = 0; i < cnt; i++)
+    {
+      uint8_t pos = positions[i];
+
+      if (pos == 255 && random8() < 1)
+      {
+        pos--;
+      }
+
+      if (pos != 255)
+      {
+        pos--;
+      }
+
+      positions[i] = pos;
+
+      if (pos != 255)
+        leds[NUM_LEDS - pos] = ColorFromPalette(gCurrentPalette, (255 / cnt) * i);
+    }
+  }
+
+  return 4;
+}
+
 typedef uint8_t (*SimplePattern)();
 typedef SimplePattern SimplePatternList[];
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 
 #include "Twinkles.h"
-#include "Disk.h"
 
 const SimplePatternList patterns = {
   pride,
   colorWaves,
-  
+  incrementalDrift,
+  radialPaletteShift,
+  paletteArcs,
+  decayingOrbits,
+
+  // polar coordinate mapping patterns from Adam Haile:
+
+  chaseSinglePixelAroundOuterRing360,
+  chaseSinglePixelAroundOuterRing256,
+  chaseRadiusLine360,
+  chaseRadiusLine256,
+  halfCircleRainbow360,
+  halfCircleRainbow256,
+
   // 1D patterns
   rainbow,
   rainbowWithGlitter,
@@ -435,14 +511,6 @@ const SimplePatternList patterns = {
   cloudTwinkles,
   incandescentTwinkles,
 
-  // polar coordinate mapping patterns from Adam Haile: 
-  chaseSinglePixelAroundOuterRing360,
-  chaseSinglePixelAroundOuterRing256,
-  chaseRadiusLine360,
-  chaseRadiusLine256,
-  halfCircleRainbow360,
-  halfCircleRainbow256,
-  
   showSolidColor,
 };
 
@@ -723,7 +791,7 @@ void handleInput(unsigned int requestedDelay) {
 void setup()
 {
   FastLED.addLeds<LED_TYPE, DATA_PIN, CLOCK_PIN, COLOR_ORDER>(leds, NUM_LEDS); // , DATA_RATE_MHZ(1)
-  FastLED.setMaxPowerInVoltsAndMilliamps(5, 6000); 
+  FastLED.setMaxPowerInVoltsAndMilliamps(5, 6000);
   FastLED.setCorrection(Typical8mmPixel);
   FastLED.setBrightness(brightness);
   FastLED.setDither(false);
@@ -740,7 +808,7 @@ void setup()
 
   FastLED.setBrightness(brightness);
   FastLED.setDither(brightness < 255);
-  
+
   setupRings();
 }
 
