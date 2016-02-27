@@ -93,6 +93,128 @@ uint8_t gCurrentPaletteNumber = 0;
 CRGBPalette16 gCurrentPalette( CRGB::Black);
 CRGBPalette16 gTargetPalette( gGradientPalettes[0] );
 
+typedef uint8_t (*SimplePattern)();
+typedef SimplePattern SimplePatternList[];
+
+// List of patterns to cycle through.  Each is defined as a separate function below.
+
+#include "Twinkles.h"
+#include "Disk.h"
+#include "Noise.h"
+
+const SimplePatternList patterns = {
+  pride,
+  colorWaves,
+  incrementalDrift,
+  radialPaletteShift,
+  paletteArcs,
+  incrementalDrift2,
+  decayingOrbits,
+  solarSystem,
+
+  // noise patterns
+  gradientPaletteNoise,
+  paletteNoise,
+  fireNoise,
+  fireNoise2,
+  lavaNoise,
+  rainbowNoise,
+  rainbowStripeNoise,
+  partyNoise,
+  forestNoise,
+  cloudNoise,
+  oceanNoise,
+  blackAndWhiteNoise,
+  blackAndBlueNoise,
+
+  // 1D patterns
+  rainbow,
+  rainbowWithGlitter,
+  rainbowSolid,
+  sinelon1,
+  bpm1,
+  juggle,
+  juggle2,
+  confetti,
+  rainbowTwinkles,
+  snowTwinkles,
+  cloudTwinkles,
+  incandescentTwinkles,
+
+  showSolidColor,
+};
+
+int patternCount = ARRAY_SIZE(patterns);
+
+void setup()
+{
+  FastLED.addLeds<LED_TYPE, DATA_PIN, CLOCK_PIN, COLOR_ORDER>(leds, NUM_LEDS); // , DATA_RATE_MHZ(1)
+  FastLED.setMaxPowerInVoltsAndMilliamps(5, 6000);
+  // FastLED.setCorrection(TypicalLEDStrip);
+  FastLED.setBrightness(brightness);
+  FastLED.setDither(false);
+  fill_solid(leds, NUM_LEDS, CRGB::Black);
+  FastLED.show();
+
+  Serial.begin(9600);
+
+  // Initialize the IR receiver
+  irReceiver.enableIRIn();
+  irReceiver.blink13(true);
+
+  loadSettings();
+
+  FastLED.setBrightness(brightness);
+  FastLED.setDither(brightness < 255);
+
+  setupRings();
+}
+
+void loop()
+{
+  // Add entropy to random number generator; we use a lot of it.
+  random16_add_entropy(random());
+
+  uint8_t requestedDelay = patterns[patternIndex]();
+
+  // send the 'leds' array out to the actual LED strip
+  FastLED.show();
+
+  handleInput(requestedDelay);
+
+  if (autoplayEnabled && millis() > autoPlayTimout) {
+    move(1);
+    autoPlayTimout = millis() + (autoPlayDurationSeconds * 1000);
+  }
+
+  // blend the current palette to the next
+  EVERY_N_MILLISECONDS(40) {
+    nblendPaletteTowardPalette(currentPalette, targetPalette, 16);
+  }
+
+  EVERY_N_MILLISECONDS( 40 ) {
+    gHue++;  // slowly cycle the "base color" through the rainbow
+  }
+
+  // slowly change to a new palette
+  EVERY_N_SECONDS(SECONDS_PER_PALETTE) {
+    paletteIndex++;
+    if (paletteIndex >= paletteCount) paletteIndex = 0;
+    targetPalette = palettes[paletteIndex];
+  };
+
+  // slowly change to a new cpt-city gradient palette
+  EVERY_N_SECONDS( SECONDS_PER_PALETTE ) {
+    gCurrentPaletteNumber = addmod8( gCurrentPaletteNumber, 1, gGradientPaletteCount);
+    gTargetPalette = gGradientPalettes[ gCurrentPaletteNumber ];
+  }
+
+  // blend the current cpt-city gradient palette to the next
+  EVERY_N_MILLISECONDS(40) {
+    nblendPaletteTowardPalette( gCurrentPalette, gTargetPalette, 16);
+  }
+}
+
 void powerOff()
 {
   // clear the display
@@ -409,8 +531,6 @@ void palettetest( CRGB* ledarray, uint16_t numleds, const CRGBPalette16& gCurren
   fill_palette( ledarray, numleds, startindex, (256 / NUM_LEDS) + 1, gCurrentPalette, 255, LINEARBLEND);
 }
 
-#include "Disk.h"
-
 uint8_t paletteArcs()
 {
   dimAll(254);
@@ -437,6 +557,31 @@ uint8_t paletteArcs()
   }
 
   return 4;
+}
+
+uint8_t incrementalDrift2()
+{
+  dimAll(beatsin8(1, 220, 254));
+
+  static uint8_t offset = 0;
+
+  uint8_t beat = 64;
+  
+  for (uint8_t i = 0; i < ringCount; i++)
+  {
+    uint8_t angle = beat8(beat-=2);
+
+    uint8_t index = angleToPixel256(angle, i);
+    leds[index] = ColorFromPalette(gCurrentPalette, (i * (255 / ringCount)) + offset);
+//    leds[index] = CHSV(i * (255 / ringCount) + offset, 255, 255);
+  }
+
+  EVERY_N_MILLISECONDS(60)
+  {
+    offset++;
+  }
+
+  return 1;
 }
 
 uint8_t decayingOrbits()
@@ -468,48 +613,43 @@ uint8_t decayingOrbits()
   return 4;
 }
 
-typedef uint8_t (*SimplePattern)();
-typedef SimplePattern SimplePatternList[];
+uint8_t solarSystem() {
+  dimAll(0);
+  
+  // sun
+  fillRing256(0, random8(2) == 0 ? CRGB::Yellow : CRGB::OrangeRed, 0, 255);
 
-// List of patterns to cycle through.  Each is defined as a separate function below.
+  for(uint8_t i = rings[1][0]; i <= rings[1][1]; i++)
+    leds[i] = random8(2) == 0 ? CRGB::Yellow : CRGB::OrangeRed;
+    
+  // fillRing256(1, CRGB::OrangeRed, 0, 255);
 
-#include "Twinkles.h"
+  // Mercury
+  leds[angleToPixel256(255 - beat8(128), 2)] = 0x2D2D2D;
 
-const SimplePatternList patterns = {
-  pride,
-  colorWaves,
-  incrementalDrift,
-  radialPaletteShift,
-  paletteArcs,
-  decayingOrbits,
+  // Venus
+  leds[angleToPixel256(255 - beat8(112), 3)] = 0x1E1D00;
 
-  // polar coordinate mapping patterns from Adam Haile:
+  // Earth
+  leds[angleToPixel256(255 - beat8(62), 4)] = CRGB::Blue;
 
-  chaseSinglePixelAroundOuterRing360,
-  chaseSinglePixelAroundOuterRing256,
-  chaseRadiusLine360,
-  chaseRadiusLine256,
-  halfCircleRainbow360,
-  halfCircleRainbow256,
+  // Mars
+  leds[angleToPixel256(255 - beat8(25), 5)] = 0x330000;
 
-  // 1D patterns
-  rainbow,
-  rainbowWithGlitter,
-  rainbowSolid,
-  sinelon1,
-  bpm1,
-  juggle,
-  juggle2,
-  confetti,
-  rainbowTwinkles,
-  snowTwinkles,
-  cloudTwinkles,
-  incandescentTwinkles,
+  // Jupiter
+  leds[angleToPixel256(255 - beat8(8), 6)] = 0x1E1D00;
 
-  showSolidColor,
-};
+  // Saturn
+  leds[angleToPixel256(255 - beat8(4), 7)] = 0x121405;
 
-int patternCount = ARRAY_SIZE(patterns);
+  // Uranus
+  leds[angleToPixel256(255 - beat8(3), 8)] = CRGB::Aqua;
+  
+  // Neptune
+  leds[angleToPixel256(255 - beat8(1), 9)] = CRGB::Blue;
+
+  return 1;
+}
 
 void moveTo(int index) {
   patternIndex = index;
@@ -782,73 +922,3 @@ void handleInput(unsigned int requestedDelay) {
       break;
   }
 }
-
-void setup()
-{
-  FastLED.addLeds<LED_TYPE, DATA_PIN, CLOCK_PIN, COLOR_ORDER>(leds, NUM_LEDS); // , DATA_RATE_MHZ(1)
-  FastLED.setMaxPowerInVoltsAndMilliamps(5, 6000);
-  FastLED.setCorrection(Typical8mmPixel);
-  FastLED.setBrightness(brightness);
-  FastLED.setDither(false);
-  fill_solid(leds, NUM_LEDS, solidColor);
-  FastLED.show();
-
-  Serial.begin(9600);
-
-  // Initialize the IR receiver
-  irReceiver.enableIRIn();
-  irReceiver.blink13(true);
-
-  loadSettings();
-
-  FastLED.setBrightness(brightness);
-  FastLED.setDither(brightness < 255);
-
-  setupRings();
-}
-
-void loop()
-{
-  // Add entropy to random number generator; we use a lot of it.
-  random16_add_entropy(random());
-
-  uint8_t requestedDelay = patterns[patternIndex]();
-
-  // send the 'leds' array out to the actual LED strip
-  FastLED.show();
-
-  handleInput(requestedDelay);
-
-  if (autoplayEnabled && millis() > autoPlayTimout) {
-    move(1);
-    autoPlayTimout = millis() + (autoPlayDurationSeconds * 1000);
-  }
-
-  // blend the current palette to the next
-  EVERY_N_MILLISECONDS(40) {
-    nblendPaletteTowardPalette(currentPalette, targetPalette, 16);
-  }
-
-  EVERY_N_MILLISECONDS( 40 ) {
-    gHue++;  // slowly cycle the "base color" through the rainbow
-  }
-
-  // slowly change to a new palette
-  EVERY_N_SECONDS(SECONDS_PER_PALETTE) {
-    paletteIndex++;
-    if (paletteIndex >= paletteCount) paletteIndex = 0;
-    targetPalette = palettes[paletteIndex];
-  };
-
-  // slowly change to a new cpt-city gradient palette
-  EVERY_N_SECONDS( SECONDS_PER_PALETTE ) {
-    gCurrentPaletteNumber = addmod8( gCurrentPaletteNumber, 1, gGradientPaletteCount);
-    gTargetPalette = gGradientPalettes[ gCurrentPaletteNumber ];
-  }
-
-  // blend the current cpt-city gradient palette to the next
-  EVERY_N_MILLISECONDS(40) {
-    nblendPaletteTowardPalette( gCurrentPalette, gTargetPalette, 16);
-  }
-}
-
