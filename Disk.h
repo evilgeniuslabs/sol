@@ -17,7 +17,7 @@ uint8_t rings[ringCount][2] = {
   {132, 163},   //6
   {92, 131},   //7
   {48, 91},   //8
-  {0, 47},    //9 Outter Ring
+  {0, 47},    //9 Outer Ring
 };
 
 //For convenience, last ring index

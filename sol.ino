@@ -19,6 +19,7 @@
 #include <FastLED.h>
 #include <IRremote.h>
 #include <EEPROM.h>
+#include <Time.h>
 
 #define IR_RECV_PIN 23
 
@@ -130,8 +131,12 @@ typedef SimplePattern SimplePatternList[];
 #include "Disk.h"
 #include "Noise.h"
 #include "PolarNoise.h"
+#include "Clock.h"
 
 const SimplePatternList patterns = {
+  handClock,
+  arcClock,
+  
   pride,
   colorWaves,
   radialPaletteShift,
@@ -212,6 +217,8 @@ void setup()
   FastLED.setDither(brightness < 255);
 
   setupRings();
+  
+  setTime(1357041600);
 }
 
 void loop()
