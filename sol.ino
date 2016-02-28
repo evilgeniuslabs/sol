@@ -93,6 +93,34 @@ uint8_t gCurrentPaletteNumber = 0;
 CRGBPalette16 gCurrentPalette( CRGB::Black);
 CRGBPalette16 gTargetPalette( gGradientPalettes[0] );
 
+uint8_t coordsX[NUM_LEDS] = 
+{ 
+  255, 253, 250, 245, 237, 228, 217, 205, 191, 176, 160, 144, 127, 110, 94, 78, 63, 49, 37, 26, 17, 9, 4, 1, 0, 1, 4, 9, 17, 26, 37, 49, 63, 78, 94, 110, 127, 144, 160, 176, 191, 205, 217, 228, 237, 245, 250, 253,
+  240, 239, 236, 230, 222, 213, 201, 188, 174, 159, 143, 127, 111, 95, 80, 66, 53, 41, 32, 24, 18, 15, 14, 15, 18, 24, 32, 41, 53, 66, 80, 95, 111, 127, 143, 159, 174, 188, 201, 213, 222, 230, 236, 239,
+  226, 225, 221, 215, 207, 197, 185, 172, 158, 143, 127, 111, 96, 82, 69, 57, 47, 39, 33, 29, 28, 29, 33, 39, 47, 57, 69, 82, 96, 111, 127, 143, 158, 172, 185, 197, 207, 215, 221, 225,
+  212, 210, 206, 198, 187, 174, 160, 144, 127, 110, 94, 80, 67, 56, 48, 44, 42, 44, 48, 56, 67, 80, 94, 110, 127, 144, 160, 174, 187, 198, 206, 210,
+  198, 196, 191, 182, 171, 158, 143, 127, 111, 96, 83, 72, 63, 58, 56, 58, 63, 72, 83, 96, 111, 127, 143, 158, 171, 182, 191, 196,
+  184, 182, 176, 167, 155, 142, 127, 112, 99, 87, 78, 72, 70, 72, 78, 87, 99, 112, 127, 142, 155, 167, 176, 182,
+  170, 167, 161, 152, 140, 127, 114, 102, 93, 87, 85, 87, 93, 102, 114, 127, 140, 152, 161, 167,
+  155, 152, 141, 127, 113, 102, 99, 102, 113, 127, 141, 152,
+  141, 134, 120, 113, 120, 134,
+  127
+};
+
+uint8_t coordsY[NUM_LEDS] =
+{
+  127, 144, 160, 176, 191, 205, 217, 228, 237, 245, 250, 253, 255, 253, 250, 245, 237, 228, 217, 205, 191, 176, 160, 144, 127, 110, 94, 78, 63, 49, 37, 26, 17, 9, 4, 1, 0, 1, 4, 9, 17, 26, 37, 49, 63, 78, 94, 110,
+  127, 143, 159, 174, 188, 201, 213, 222, 230, 236, 239, 240, 239, 236, 230, 222, 213, 201, 188, 174, 159, 143, 127, 111, 95, 80, 66, 53, 41, 32, 24, 18, 15, 14, 15, 18, 24, 32, 41, 53, 66, 80, 95, 111,
+  127, 143, 158, 172, 185, 197, 207, 215, 221, 225, 226, 225, 221, 215, 207, 197, 185, 172, 158, 143, 127, 111, 96, 82, 69, 57, 47, 39, 33, 29, 28, 29, 33, 39, 47, 57, 69, 82, 96, 111,
+  127, 144, 160, 174, 187, 198, 206, 210, 212, 210, 206, 198, 187, 174, 160, 144, 127, 110, 94, 80, 67, 56, 48, 44, 42, 44, 48, 56, 67, 80, 94, 110,
+  127, 143, 158, 171, 182, 191, 196, 198, 196, 191, 182, 171, 158, 143, 127, 111, 96, 83, 72, 63, 58, 56, 58, 63, 72, 83, 96, 111,
+  127, 142, 155, 167, 176, 182, 184, 182, 176, 167, 155, 142, 127, 112, 99, 87, 78, 72, 70, 72, 78, 87, 99, 112,
+  127, 140, 152, 161, 167, 170, 167, 161, 152, 140, 127, 114, 102, 93, 87, 85, 87, 93, 102, 114,
+  127, 141, 152, 155, 152, 141, 127, 113, 102, 99, 102, 113,
+  127, 139, 139, 127, 115, 115,
+  127
+};
+
 typedef uint8_t (*SimplePattern)();
 typedef SimplePattern SimplePatternList[];
 
@@ -101,20 +129,23 @@ typedef SimplePattern SimplePatternList[];
 #include "Twinkles.h"
 #include "Disk.h"
 #include "Noise.h"
+#include "PolarNoise.h"
 
 const SimplePatternList patterns = {
   pride,
   colorWaves,
-  incrementalDrift,
   radialPaletteShift,
   paletteArcs,
-  incrementalDrift2,
+  incrementalDrift,
   decayingOrbits,
   solarSystem,
 
+  // XY map patterns
+  horizontalRainbow,
+  verticalRainbow,
+  diagonalRainbow,
+
   // noise patterns
-  gradientPaletteNoise,
-  paletteNoise,
   fireNoise,
   fireNoise2,
   lavaNoise,
@@ -127,12 +158,27 @@ const SimplePatternList patterns = {
   blackAndWhiteNoise,
   blackAndBlueNoise,
 
+  // polar noise patterns
+  gradientPalettePolarNoise,
+  palettePolarNoise,
+  firePolarNoise,
+  firePolarNoise2,
+  lavaPolarNoise,
+  rainbowPolarNoise,
+  rainbowStripePolarNoise,
+  partyPolarNoise,
+  forestPolarNoise,
+  cloudPolarNoise,
+  oceanPolarNoise,
+  blackAndWhitePolarNoise,
+  blackAndBluePolarNoise,
+
   // 1D patterns
   rainbow,
   rainbowWithGlitter,
   rainbowSolid,
-  sinelon1,
-  bpm1,
+  sinelon,
+  bpm,
   juggle,
   juggle2,
   confetti,
@@ -281,6 +327,39 @@ void dimAll(byte value)
   }
 }
 
+uint8_t horizontalRainbow()
+{
+  unsigned long t = millis();
+
+  for (uint8_t i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CHSV( coordsX[i] + (t / 10), 255, 255);
+  }
+
+  return 1;
+}
+
+uint8_t verticalRainbow()
+{
+  unsigned long t = millis();
+
+  for (uint8_t i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CHSV( coordsY[i] + (t / 10), 255, 255);
+  }
+
+  return 1;
+}
+
+uint8_t diagonalRainbow()
+{
+  unsigned long t = millis();
+
+  for (uint8_t i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CHSV( coordsX[i] + coordsY[i] + (t / 10), 255, 255);
+  }
+
+  return 1;
+}
+
 // Patterns from FastLED example DemoReel100: https://github.com/FastLED/FastLED/blob/master/examples/DemoReel100/DemoReel100.ino
 
 uint8_t rainbow()
@@ -320,16 +399,26 @@ uint8_t confetti()
   return 8;
 }
 
-uint8_t sinelon1()
+// Updated sinelon (no visual gaps)
+uint8_t sinelon()
 {
-  // a colored dot sweeping back and forth, with fading trails
+  // a colored dot sweeping 
+  // back and forth, with 
+  // fading trails
   fadeToBlackBy( leds, NUM_LEDS, 20);
-  int pos = beatsin16(13, 0, NUM_LEDS);
-  leds[pos] += CHSV( gHue, 255, 192);
+  uint16_t pos = beatsin16(13,0,NUM_LEDS);
+  static uint16_t prevpos = 0;
+  if( pos < prevpos ) { 
+    fill_solid( leds+pos, (prevpos-pos)+1, CHSV(gHue,220,255));
+  } else { 
+    fill_solid( leds+prevpos, (pos-prevpos)+1, CHSV( gHue,220,255));
+  }
+  prevpos = pos;
+
   return 8;
 }
 
-uint8_t bpm1()
+uint8_t bpm()
 {
   // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
   uint8_t BeatsPerMinute = 62;
@@ -342,12 +431,12 @@ uint8_t bpm1()
 }
 
 uint8_t juggle() {
-  // eight colored dots, weaving in and out of sync with each other
+  // colored dots, weaving in and out of sync with each other
   fadeToBlackBy( leds, NUM_LEDS, 20);
   byte dothue = 0;
-  uint8_t dotcount = 3;
+  uint8_t dotcount = 4;
   for ( int i = 0; i < dotcount; i++) {
-    leds[beatsin16(i + (dotcount - 1), 0, NUM_LEDS)] |= CHSV(dothue, 200, 255);
+    leds[beatsin16(i + (dotcount - 1), 0, NUM_LEDS)] |= ColorFromPalette(gCurrentPalette, dothue); // CHSV(dothue, 200, 255);
     dothue += (256 / dotcount);
   }
 
@@ -371,9 +460,9 @@ uint8_t juggle2()
   if (lastSecond != secondHand) { // Debounce to make sure we're not repeating an assignment.
     lastSecond = secondHand;
     switch (secondHand) {
-      case  0: numdots = 1; basebeat = 20; hueinc = 16; faderate = 2; thishue = 0; break; // You can change values here, one at a time , or altogether.
-      case 10: numdots = 4; basebeat = 10; hueinc = 16; faderate = 8; thishue = 128; break;
-      case 20: numdots = 8; basebeat =  3; hueinc =  0; faderate = 8; thishue = random8(); break; // Only gets called once, and not continuously for the next several seconds. Therefore, no rainbows.
+      case  0: numdots = 2; basebeat = 5; hueinc = 16; faderate = 2; thishue = 0; break; // You can change values here, one at a time , or altogether.
+      case 10: numdots = 3; basebeat = 4; hueinc = 16; faderate = 8; thishue = 128; break;
+      case 20: numdots = 4; basebeat =  3; hueinc =  0; faderate = 8; thishue = random8(); break; // Only gets called once, and not continuously for the next several seconds. Therefore, no rainbows.
       case 30: break;
     }
   }
@@ -395,16 +484,6 @@ uint8_t showSolidColor()
   fill_solid(leds, NUM_LEDS, solidColor);
 
   return 30;
-}
-
-uint8_t incrementalDrift() {
-  uint8_t stepwidth = 256 * (20 - 1) / NUM_LEDS;
-  for (uint8_t i = 0; i < NUM_LEDS; i++) {
-    uint8_t bri = beatsin88(1 * 256 + (NUM_LEDS - i) * stepwidth, 0, 256);
-    leds[i] = ColorFromPalette(gCurrentPalette, 2.5 * i + gHue, bri, LINEARBLEND);
-  }
-
-  return 8;
 }
 
 // Pride2015 by Mark Kriegsman: https://gist.github.com/kriegsman/964de772d64c502760e5
@@ -559,7 +638,7 @@ uint8_t paletteArcs()
   return 4;
 }
 
-uint8_t incrementalDrift2()
+uint8_t incrementalDrift()
 {
   dimAll(beatsin8(1, 220, 254));
 

@@ -15,6 +15,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #define MATRIX_WIDTH 32
 #define MATRIX_HEIGHT 32
 
@@ -88,59 +89,29 @@ void SetupBlackAndBlueStripedPalette()
 
 uint8_t drawNoise(CRGBPalette16 palette, uint8_t hueReduce = 0)
 {
-  for (uint8_t ringIndex = 0; ringIndex < ringCount; ringIndex++) { // y
-    uint8_t ringStart = rings[ringIndex][0];
-    uint8_t ringEnd = rings[ringIndex][1];
-    
-    for (uint8_t i = ringStart; i <= ringEnd; i++) { // x
-      uint8_t x = (i - ringStart) * (256 / (ringEnd - ringStart));
-      uint8_t y = ringIndex * (128 / ringCount);
-      
-      int xoffset = noisescale * x;
-      int yoffset = noisescale * y;
+  for (uint8_t i = 0; i < NUM_LEDS; i++) {
+    uint8_t x = coordsX[i];
+    uint8_t y = coordsY[i];
 
-      uint8_t data = inoise8(x + xoffset + noisex, y + yoffset + noisey, noisez);
-  
-      // The range of the inoise8 function is roughly 16-238.
-      // These two operations expand those values out to roughly 0..255
-      // You can comment them out if you want the raw noise data.
-      data = qsub8(data, 16);
-      data = qadd8(data, scale8(data, 39));
-  
-      leds[i] = ColorFromPalette(palette, data, 255, LINEARBLEND);
-    }
+    int xoffset = noisescale * x;
+    int yoffset = noisescale * y;
 
-//    if(ringIndex != 0) {
-//      // blend the first pixel in the ring into the last
-//      nblend(leds[ringStart], leds[ringEnd], 192);
-//      nblend(leds[ringStart + 1], leds[ringEnd - 1], 128);
-//      nblend(leds[ringStart + 2], leds[ringEnd - 2], 64);
-//    }
+    uint8_t data = inoise8(x + xoffset + noisex, y + yoffset + noisey, noisez);
+
+    // The range of the inoise8 function is roughly 16-238.
+    // These two operations expand those values out to roughly 0..255
+    // You can comment them out if you want the raw noise data.
+    data = qsub8(data, 16);
+    data = qadd8(data, scale8(data, 39));
+
+    leds[i] = ColorFromPalette(palette, data, 255, LINEARBLEND);
   }
-  
+
   noisex += noisespeedx;
   noisey += noisespeedy;
   noisez += noisespeedz;
 
   return 8;
-}
-
-uint8_t gradientPaletteNoise() {
-  noisespeedx = 4;
-  noisespeedy = 0;
-  noisespeedz = 0;
-  noisescale = 1;
-  colorLoop = 0;
-  return drawNoise(gCurrentPalette);
-}
-
-uint8_t paletteNoise() {
-  noisespeedx = 9;
-  noisespeedy = 0;
-  noisespeedz = 0;
-  noisescale = 1;
-  colorLoop = 0;
-  return drawNoise(currentPalette);
 }
 
 uint8_t rainbowNoise() {
@@ -190,7 +161,7 @@ uint8_t cloudNoise() {
 
 uint8_t fireNoise() {
   noisespeedx = 0; // 24;
-  noisespeedy = -24;
+  noisespeedy = 64;
   noisespeedz = 0;
   noisescale = 4;
   colorLoop = 0;
@@ -199,7 +170,7 @@ uint8_t fireNoise() {
 
 uint8_t fireNoise2() {
   noisespeedx = 0;
-  noisespeedy = -8;
+  noisespeedy = 8;
   noisespeedz = 4;
   noisescale = 1;
   colorLoop = 0;
@@ -209,16 +180,16 @@ uint8_t fireNoise2() {
 uint8_t lavaNoise() {
   noisespeedx = 0;
   noisespeedy = -1;
-  noisespeedz = 1;
-  noisescale = 1;
+  noisespeedz = 2;
+  noisescale = 0;
   colorLoop = 0;
   return drawNoise(LavaColors_p);
 }
 
 uint8_t oceanNoise() {
-  noisespeedx = -1; // beatsin8(6, 0, 2) - 1;
+  noisespeedx = 0;
   noisespeedy = 0;
-  noisespeedz = 1;
+  noisespeedz = 2;
   noisescale = 0;
   colorLoop = 0;
   return drawNoise(OceanColors_p);
@@ -226,7 +197,7 @@ uint8_t oceanNoise() {
 
 uint8_t blackAndWhiteNoise() {
   SetupBlackAndWhiteStripedPalette();
-  noisespeedx = -4; // beatsin8(8, 0, 9) - 4;
+  noisespeedx = 12;
   noisespeedy = 0;
   noisespeedz = 0;
   noisescale = 0;
@@ -237,7 +208,7 @@ uint8_t blackAndWhiteNoise() {
 uint8_t blackAndBlueNoise() {
   SetupBlackAndBlueStripedPalette();
   noisespeedx = 0;
-  noisespeedy = -8; // beatsin8(8, 0, 16) - 8;
+  noisespeedy = -8;
   noisespeedz = 0;
   noisescale = 1;
   colorLoop = 0;
