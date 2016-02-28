@@ -94,8 +94,8 @@ uint8_t gCurrentPaletteNumber = 0;
 CRGBPalette16 gCurrentPalette( CRGB::Black);
 CRGBPalette16 gTargetPalette( gGradientPalettes[0] );
 
-uint8_t coordsX[NUM_LEDS] = 
-{ 
+uint8_t coordsX[NUM_LEDS] =
+{
   255, 253, 250, 245, 237, 228, 217, 205, 191, 176, 160, 144, 127, 110, 94, 78, 63, 49, 37, 26, 17, 9, 4, 1, 0, 1, 4, 9, 17, 26, 37, 49, 63, 78, 94, 110, 127, 144, 160, 176, 191, 205, 217, 228, 237, 245, 250, 253,
   240, 239, 236, 230, 222, 213, 201, 188, 174, 159, 143, 127, 111, 95, 80, 66, 53, 41, 32, 24, 18, 15, 14, 15, 18, 24, 32, 41, 53, 66, 80, 95, 111, 127, 143, 159, 174, 188, 201, 213, 222, 230, 236, 239,
   226, 225, 221, 215, 207, 197, 185, 172, 158, 143, 127, 111, 96, 82, 69, 57, 47, 39, 33, 29, 28, 29, 33, 39, 47, 57, 69, 82, 96, 111, 127, 143, 158, 172, 185, 197, 207, 215, 221, 225,
@@ -122,6 +122,56 @@ uint8_t coordsY[NUM_LEDS] =
   127
 };
 
+// Params for width and height
+const uint8_t kMatrixWidth = 16;
+const uint8_t kMatrixHeight = 16;
+
+const uint8_t maxX = kMatrixWidth - 1;
+const uint8_t maxY = kMatrixHeight - 1;
+
+uint8_t coordsX16[NUM_LEDS] =
+{
+  16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 2, 1, 1, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 14, 15, 15, 16, 16,
+  15, 15, 15, 14, 14, 13, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 3, 2, 2, 1, 1, 1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 14, 15, 15,
+  14, 14, 14, 13, 13, 12, 12, 11, 10, 9, 8, 7, 6, 5, 4, 4, 3, 2, 2, 2, 2, 2, 2, 2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 14, 14,
+  13, 13, 13, 12, 12, 11, 10, 9, 8, 7, 6, 5, 4, 4, 3, 3, 3, 3, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13,
+  12, 12, 12, 11, 11, 10, 9, 8, 7, 6, 5, 5, 4, 4, 4, 4, 4, 5, 5, 6, 7, 8, 9, 10, 11, 11, 12, 12,
+  12, 11, 11, 10, 10, 9, 8, 7, 6, 5, 5, 5, 4, 5, 5, 5, 6, 7, 8, 9, 10, 10, 11, 11,
+  11, 10, 10, 10, 9, 8, 7, 6, 6, 5, 5, 5, 6, 6, 7, 8, 9, 10, 10, 10,
+  10, 10, 9, 8, 7, 6, 6, 6, 7, 8, 9, 10,
+  9, 8, 8, 7, 8, 8,
+  8
+};
+
+uint8_t coordsY16[NUM_LEDS] =
+{
+  8, 9, 10, 11, 12, 13, 14, 14, 15, 15, 16, 16, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 2, 1, 1, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 4, 5, 6, 7,
+  8, 9, 10, 11, 12, 13, 13, 14, 14, 15, 15, 15, 15, 15, 14, 14, 13, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 3, 2, 2, 1, 1, 1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7,
+  8, 9, 10, 11, 12, 12, 13, 13, 14, 14, 14, 14, 14, 13, 13, 12, 12, 11, 10, 9, 8, 7, 6, 5, 4, 4, 3, 2, 2, 2, 2, 2, 2, 2, 3, 4, 4, 5, 6, 7,
+  8, 9, 10, 11, 12, 12, 13, 13, 13, 13, 13, 12, 12, 11, 10, 9, 8, 7, 6, 5, 4, 4, 3, 3, 3, 3, 3, 4, 4, 5, 6, 7,
+  8, 9, 10, 11, 11, 12, 12, 12, 12, 12, 11, 11, 10, 9, 8, 7, 6, 5, 5, 4, 4, 4, 4, 4, 5, 5, 6, 7,
+  8, 9, 10, 10, 11, 11, 12, 11, 11, 10, 10, 9, 8, 7, 6, 5, 5, 5, 4, 5, 5, 5, 6, 7,
+  8, 9, 10, 10, 10, 11, 10, 10, 10, 9, 8, 7, 6, 6, 5, 5, 5, 6, 6, 7,
+  8, 9, 10, 10, 10, 9, 8, 7, 6, 6, 6, 7,
+  8, 9, 9, 8, 7, 7,
+  8
+};
+
+void setPixelXY(uint8_t x, uint8_t y, CRGB color) {
+  if (x >= kMatrixWidth || y >= kMatrixHeight)
+    return;
+
+  for (uint8_t i = 0; i < NUM_LEDS; i++) {
+    if(coordsX16[i] != x)
+      continue;
+
+    if(coordsY16[i] != y)
+      continue;
+    
+    leds[i] = color;
+  }
+}
+
 typedef uint8_t (*SimplePattern)();
 typedef SimplePattern SimplePatternList[];
 
@@ -136,7 +186,7 @@ typedef SimplePattern SimplePatternList[];
 const SimplePatternList patterns = {
   handClock,
   arcClock,
-  
+
   pride,
   colorWaves,
   radialPaletteShift,
@@ -146,9 +196,13 @@ const SimplePatternList patterns = {
   solarSystem,
 
   // XY map patterns
+  wave,
+  pulse,
   horizontalRainbow,
   verticalRainbow,
   diagonalRainbow,
+  fire,
+  water,
 
   // noise patterns (XY and Polar variations)
   gradientPalettePolarNoise,
@@ -217,7 +271,7 @@ void setup()
   FastLED.setDither(brightness < 255);
 
   setupRings();
-  
+
   setTime(1357041600);
 }
 
@@ -324,6 +378,39 @@ uint8_t cycleBrightness() {
   return brightness;
 }
 
+// algorithm from http://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+void drawCircle(uint8_t x0, uint8_t y0, uint8_t radius, const CRGB color)
+{
+  int a = radius, b = 0;
+  int radiusError = 1 - a;
+
+  if (radius == 0) {
+    setPixelXY(x0, y0, color);
+    return;
+  }
+
+  while (a >= b)
+  {
+    setPixelXY(a + x0, b + y0, color);
+    setPixelXY(b + x0, a + y0, color);
+    setPixelXY(-a + x0, b + y0, color);
+    setPixelXY(-b + x0, a + y0, color);
+    setPixelXY(-a + x0, -b + y0, color);
+    setPixelXY(-b + x0, -a + y0, color);
+    setPixelXY(a + x0, -b + y0, color);
+    setPixelXY(b + x0, -a + y0, color);
+
+    b++;
+    if (radiusError < 0)
+      radiusError += 2 * b + 1;
+    else
+    {
+      a--;
+      radiusError += 2 * (b - a + 1);
+    }
+  }
+}
+
 // scale the brightness of all pixels down
 void dimAll(byte value)
 {
@@ -363,6 +450,114 @@ uint8_t diagonalRainbow()
   }
 
   return 1;
+}
+
+uint8_t wave()
+{
+  const uint8_t scale = 256 / kMatrixWidth;
+
+  static uint8_t rotation = 0;
+  static uint8_t theta = 0;
+  static uint8_t waveCount = 1;
+
+  uint8_t n = 0;
+
+  switch (rotation) {
+    case 0:
+      for (int x = 0; x < kMatrixWidth; x++) {
+        n = quadwave8(x * 2 + theta) / scale;
+        setPixelXY(x, n, ColorFromPalette(currentPalette, x + gHue, 255, LINEARBLEND));
+        if (waveCount == 2)
+          setPixelXY(x, maxY - n, ColorFromPalette(currentPalette, x + gHue, 255, LINEARBLEND));
+      }
+      break;
+
+    case 1:
+      for (int y = 0; y < kMatrixHeight; y++) {
+        n = quadwave8(y * 2 + theta) / scale;
+        setPixelXY(n, y, ColorFromPalette(currentPalette, y + gHue, 255, LINEARBLEND));
+        if (waveCount == 2)
+          setPixelXY(maxX - n, y, ColorFromPalette(currentPalette, y + gHue, 255, LINEARBLEND));
+      }
+      break;
+
+    case 2:
+      for (int x = 0; x < kMatrixWidth; x++) {
+        n = quadwave8(x * 2 - theta) / scale;
+        setPixelXY(x, n, ColorFromPalette(currentPalette, x + gHue));
+        if (waveCount == 2)
+          setPixelXY(x, maxY - n, ColorFromPalette(currentPalette, x + gHue, 255, LINEARBLEND));
+      }
+      break;
+
+    case 3:
+      for (int y = 0; y < kMatrixHeight; y++) {
+        n = quadwave8(y * 2 - theta) / scale;
+        setPixelXY(n, y, ColorFromPalette(currentPalette, y + gHue, 255, LINEARBLEND));
+        if (waveCount == 2)
+          setPixelXY(maxX - n, y, ColorFromPalette(currentPalette, y + gHue, 255, LINEARBLEND));
+      }
+      break;
+  }
+
+  dimAll(254);
+
+  EVERY_N_SECONDS(10)
+  {
+    rotation = random(0, 4);
+    // waveCount = random(1, 3);
+  };
+
+  EVERY_N_MILLISECONDS(7) {
+    theta++;
+  }
+
+  return 8;
+}
+
+uint8_t pulse()
+{
+  dimAll(200);
+
+  uint8_t maxSteps = 16;
+  static uint8_t step = maxSteps;
+  static uint8_t centerX = 0;
+  static uint8_t centerY = 0;
+  float fadeRate = 0.8;
+
+  if (step >= maxSteps)
+  {
+    centerX = random(kMatrixWidth);
+    centerY = random(kMatrixWidth);
+    step = 0;
+  }
+
+  if (step == 0)
+  {
+    drawCircle(centerX, centerY, step, ColorFromPalette(currentPalette, gHue, 255, LINEARBLEND));
+    step++;
+  }
+  else
+  {
+    if (step < maxSteps)
+    {
+      // initial pulse
+      drawCircle(centerX, centerY, step, ColorFromPalette(currentPalette, gHue, pow(fadeRate, step - 2) * 255, LINEARBLEND));
+
+      // secondary pulse
+      if (step > 3) {
+        drawCircle(centerX, centerY, step - 3, ColorFromPalette(currentPalette, gHue, pow(fadeRate, step - 2) * 255, LINEARBLEND));
+      }
+
+      step++;
+    }
+    else
+    {
+      step = -1;
+    }
+  }
+
+  return 30;
 }
 
 // Patterns from FastLED example DemoReel100: https://github.com/FastLED/FastLED/blob/master/examples/DemoReel100/DemoReel100.ino
@@ -407,16 +602,16 @@ uint8_t confetti()
 // Updated sinelon (no visual gaps)
 uint8_t sinelon()
 {
-  // a colored dot sweeping 
-  // back and forth, with 
+  // a colored dot sweeping
+  // back and forth, with
   // fading trails
   fadeToBlackBy( leds, NUM_LEDS, 20);
-  uint16_t pos = beatsin16(13,0,NUM_LEDS);
+  uint16_t pos = beatsin16(13, 0, NUM_LEDS);
   static uint16_t prevpos = 0;
-  if( pos < prevpos ) { 
-    fill_solid( leds+pos, (prevpos-pos)+1, CHSV(gHue,220,255));
-  } else { 
-    fill_solid( leds+prevpos, (pos-prevpos)+1, CHSV( gHue,220,255));
+  if ( pos < prevpos ) {
+    fill_solid( leds + pos, (prevpos - pos) + 1, CHSV(gHue, 220, 255));
+  } else {
+    fill_solid( leds + prevpos, (pos - prevpos) + 1, CHSV( gHue, 220, 255));
   }
   prevpos = pos;
 
@@ -480,6 +675,86 @@ uint8_t juggle2()
     leds[beatsin16(basebeat + i + numdots, 0, NUM_LEDS)] += CHSV(gHue + curhue, thissat, thisbright);
     curhue += hueinc;
   }
+
+  return 8;
+}
+
+// based on FastLED example Fire2012WithPalette: https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
+void heatMap(CRGBPalette16 palette, bool up)
+{
+  dimAll(254);
+
+  // Add entropy to random number generator; we use a lot of it.
+  random16_add_entropy(random(256));
+
+  // COOLING: How much does the air cool as it rises?
+  // Less cooling = taller flames.  More cooling = shorter flames.
+  // Default 55, suggested range 20-100
+  uint8_t cooling = 55;
+
+  // SPARKING: What chance (out of 255) is there that a new spark will be lit?
+  // Higher chance = more roaring fire.  Lower chance = more flickery fire.
+  // Default 120, suggested range 50-200.
+  uint8_t sparking = 120;
+
+  // Array of temperature readings at each simulation cell
+  static byte heat[kMatrixWidth + 2][kMatrixHeight + 2];
+
+  for (uint8_t x = 0; x < kMatrixWidth; x++)
+  {
+    // Step 1.  Cool down every cell a little
+    for (uint8_t y = 0; y < kMatrixHeight; y++)
+    {
+      heat[x][y] = qsub8(heat[x][y], random8(0, ((cooling * 10) / kMatrixHeight) + 2));
+    }
+
+    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+    for (uint8_t y = 0; y < kMatrixHeight; y++)
+    {
+      heat[x][y] = (heat[x][y + 1] + heat[x][y + 2] + heat[x][y + 2]) / 3;
+    }
+
+    // Step 2.  Randomly ignite new 'sparks' of heat
+    if (random8() < sparking)
+    {
+      heat[x][maxY] = qadd8(heat[x][maxY], random8(160, 255));
+    }
+
+    // Step 4.  Map from heat cells to LED colors
+    for (uint8_t y = 0; y < kMatrixHeight; y++)
+    {
+      uint8_t colorIndex = 0;
+
+      if (up)
+        colorIndex = heat[x][y];
+      else
+        colorIndex = heat[x][(maxY) - y];
+
+      // Recommend that you use values 0-240 rather than
+      // the usual 0-255, as the last 15 colors will be
+      // 'wrapping around' from the hot end to the cold end,
+      // which looks wrong.
+      colorIndex = scale8(colorIndex, 240);
+
+      // override color 0 to ensure a black background
+      if (colorIndex != 0)
+      {
+        setPixelXY(x, y, ColorFromPalette(palette, colorIndex, 255, LINEARBLEND));
+      }
+    }
+  }
+}
+
+uint8_t fire()
+{
+  heatMap(HeatColors_p, true);
+
+  return 8;
+}
+
+uint8_t water()
+{
+  heatMap(IceColors_p, false);
 
   return 8;
 }
@@ -650,14 +925,14 @@ uint8_t incrementalDrift()
   static uint8_t offset = 0;
 
   uint8_t beat = 64;
-  
+
   for (uint8_t i = 0; i < ringCount; i++)
   {
-    uint8_t angle = beat8(beat-=2);
+    uint8_t angle = beat8(beat -= 2);
 
     uint8_t index = angleToPixel256(angle, i);
     leds[index] = ColorFromPalette(gCurrentPalette, (i * (255 / ringCount)) + offset);
-//    leds[index] = CHSV(i * (255 / ringCount) + offset, 255, 255);
+    //    leds[index] = CHSV(i * (255 / ringCount) + offset, 255, 255);
   }
 
   EVERY_N_MILLISECONDS(60)
@@ -689,7 +964,7 @@ uint8_t decayingOrbits()
 
       if (pos != 255)
         leds[NUM_LEDS - pos] = ColorFromPalette(gCurrentPalette, (255 / count) * i);
-        
+
       positions[i] = pos;
     }
   }
@@ -699,13 +974,13 @@ uint8_t decayingOrbits()
 
 uint8_t solarSystem() {
   dimAll(0);
-  
+
   // sun
   fillRing256(0, random8(2) == 0 ? CRGB::Yellow : CRGB::OrangeRed, 0, 255);
 
-  for(uint8_t i = rings[1][0]; i <= rings[1][1]; i++)
+  for (uint8_t i = rings[1][0]; i <= rings[1][1]; i++)
     leds[i] = random8(2) == 0 ? CRGB::Yellow : CRGB::OrangeRed;
-    
+
   // fillRing256(1, CRGB::OrangeRed, 0, 255);
 
   // Mercury
@@ -728,7 +1003,7 @@ uint8_t solarSystem() {
 
   // Uranus
   leds[angleToPixel256(255 - beat8(3), 8)] = CRGB::Aqua;
-  
+
   // Neptune
   leds[angleToPixel256(255 - beat8(1), 9)] = CRGB::Blue;
 
