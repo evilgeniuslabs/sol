@@ -119,8 +119,13 @@ uint8_t cloudPolarNoise() {
 }
 
 uint8_t firePolarNoise() {
+//  noisespeedx = 0; // 24;
+//  noisespeedy = -24;
+//  noisespeedz = 0;
+//  noisescale = 4;
+//  colorLoop = 0;
   noisespeedx = 0; // 24;
-  noisespeedy = -24;
+  noisespeedy = -32;
   noisespeedz = 0;
   noisescale = 4;
   colorLoop = 0;
@@ -128,8 +133,13 @@ uint8_t firePolarNoise() {
 }
 
 uint8_t firePolarNoise2() {
+//  noisespeedx = 0;
+//  noisespeedy = -8;
+//  noisespeedz = 4;
+//  noisescale = 1;
+//  colorLoop = 0;
   noisespeedx = 0;
-  noisespeedy = -8;
+  noisespeedy = -4;
   noisespeedz = 4;
   noisescale = 1;
   colorLoop = 0;
