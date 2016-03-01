@@ -12,4 +12,4 @@ Build your own, or buy one (finished or kit) from [Evil Genius Labs](http://www.
 
 Controlled via a wireless infrared remote control.
 
-Build pics, videos, and more details: https://goo.gl/photos/ijtXuzpKviSNW9Kv7
+Build pics, videos, and more details: https://goo.gl/photos/r1iTCG6SSmyAfgbs8
